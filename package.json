@@ -1,8 +1,8 @@
 {
-  "name": "dts-temp",
+  "name": "dms-core",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Professional Document Management System Core",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
