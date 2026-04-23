@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+
+export interface LinkModalData {
+  id: string;
+  link: string;
+  isHistory: boolean;
+  docId?: string;
+}
 
 interface UIContextType {
   isSidebarCollapsed: boolean;
@@ -16,8 +23,12 @@ interface UIContextType {
   toggleColumn: (id: string) => void;
   columnWidths: Record<string, number>;
   handleResizeStart: (e: React.MouseEvent, id: string) => void;
-  linkModalData: any | null;
-  setLinkModalData: (data: any | null) => void;
+  linkModalData: LinkModalData | null;
+  setLinkModalData: (data: LinkModalData | null) => void;
+  linkInput: string;
+  setLinkInput: (v: string) => void;
+  isReadOnly: boolean;
+  setIsReadOnly: (v: boolean) => void;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -28,14 +39,16 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [isBulkAddModalOpen, setIsBulkAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState({ disiplin: '', previewReport: '', issue: '' });
-  const [linkModalData, setLinkModalData] = useState<any | null>(null);
+  const [linkModalData, setLinkModalDataInternal] = useState<LinkModalData | null>(null);
+  const [linkInput, setLinkInput] = useState('');
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set([
     'noDokumen', 'namaDokumen', 'previewReport', 'transmittal', 'tanggal', 'issue', 'noRevisi', 'lokasiStatus', 'deskripsiLink'
   ]));
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
-    select: 40, noDokumen: 180, namaDokumen: 250, disiplin: 120, lokasiStatus: 180,
-    previewReport: 80, transmittalNo: 150, tanggalTransmittal: 120, issue: 120, 
-    noRevisi: 80, deskripsiLink: 150
+    select: 40, noDokumen: 160, namaDokumen: 220, disiplin: 100, lokasiStatus: 140, 
+    status: 90, transmittal: 70, tanggalTransmittal: 90, issue: 130, noRevisi: 35, 
+    action: 70, control: 35, no: 40, link: 50
   });
 
   const toggleColumn = useCallback((id: string) => {
@@ -47,20 +60,43 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     });
   }, []);
 
+  const columnWidthsRef = useRef(columnWidths);
+  useEffect(() => { columnWidthsRef.current = columnWidths; }, [columnWidths]);
+
   const handleResizeStart = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
     const startX = e.pageX;
-    const startWidth = columnWidths[id];
+    const startWidth = columnWidthsRef.current[id] ?? 150;
+    let rafId: number;
+
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = Math.max(50, startWidth + (moveEvent.pageX - startX));
-      setColumnWidths(prev => ({ ...prev, [id]: newWidth }));
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const newWidth = Math.max(50, startWidth + (moveEvent.pageX - startX));
+        setColumnWidths(prev => ({ ...prev, [id]: newWidth }));
+      });
     };
+
     const onMouseUp = () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      document.body.classList.remove('resizing');
     };
+
+    document.body.classList.add('resizing');
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-  }, [columnWidths]);
+  }, []); // stable — no stale closure via ref
+
+  const setLinkModalData = useCallback((data: LinkModalData | null) => {
+    setLinkModalDataInternal(data);
+    if (data) {
+      setLinkInput(data.link || '-');
+    } else {
+      setLinkInput('');
+    }
+  }, []);
 
   const value = {
     isSidebarCollapsed, setIsSidebarCollapsed,
@@ -70,7 +106,9 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     activeFilters, setActiveFilters,
     visibleColumns, setVisibleColumns, toggleColumn,
     columnWidths, handleResizeStart,
-    linkModalData, setLinkModalData
+    linkModalData, setLinkModalData,
+    linkInput, setLinkInput,
+    isReadOnly, setIsReadOnly
   };
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

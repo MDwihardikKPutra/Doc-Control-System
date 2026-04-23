@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, LayoutGrid, TrendingUp, History, Database } from 'lucide-react';
+import { FileText, LayoutGrid, TrendingUp, History, Database, HelpCircle } from 'lucide-react';
 import { useUI } from '../../context/UIContext';
 import { useProjects } from '../../context/ProjectContext';
 import { slugify } from '../../utils';
@@ -20,7 +20,8 @@ export const AppSidebar: React.FC = () => {
     { path: '/projects', icon: LayoutGrid, label: 'Projects', enabled: true },
     { path: currentProject ? `/${slugify(currentProject.name)}/tracking` : '/tracking', icon: Database, label: 'Tracking', enabled: !!currentProject },
     { path: currentProject ? `/${slugify(currentProject.name)}/insights` : '/insights', icon: TrendingUp, label: 'Insights', enabled: !!currentProject },
-    { path: '/audit', icon: History, label: 'Audit Log', enabled: true },
+    { path: '/audit', icon: History, label: 'Audit Log', enabled: !!currentProject },
+    { path: '/help', icon: HelpCircle, label: 'Help Center', enabled: true },
   ];
 
   return (

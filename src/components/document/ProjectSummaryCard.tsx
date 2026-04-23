@@ -1,5 +1,6 @@
 import React from 'react';
 import { Briefcase } from 'lucide-react';
+import { useUI } from '../../context/UIContext';
 
 interface ProjectSummaryCardProps {
   project: any;
@@ -12,17 +13,50 @@ interface ProjectSummaryCardProps {
     pending: number;
     pendingPct: number;
   };
+  isEmbedded?: boolean;
 }
 
-export const ProjectSummaryCard: React.FC<ProjectSummaryCardProps> = ({ project, stats }) => {
+export const ProjectSummaryCard: React.FC<ProjectSummaryCardProps> = ({ project, stats, isEmbedded }) => {
+  const { isReadOnly } = useUI();
+
   return (
-    <div className="card" style={{ padding: '0', marginBottom: '12px', overflow: 'hidden', border: 'var(--border-width) solid var(--border-color)', display: 'grid', gridTemplateColumns: '1fr 1.5fr', position: 'relative' }}>
+    <div style={{ 
+      padding: '0', 
+      marginBottom: isEmbedded ? '0' : '12px', 
+      overflow: 'hidden', 
+      borderBottom: isEmbedded ? 'var(--border-width) solid var(--border-color)' : 'none',
+      border: isEmbedded ? 'none' : 'var(--border-width) solid var(--border-color)', 
+      borderRadius: isEmbedded ? '0' : 'var(--radius-main)',
+      display: 'grid', 
+      gridTemplateColumns: '1fr 1.5fr', 
+      position: 'relative',
+      backgroundColor: '#ffffff'
+    }}>
       {/* Left Side: Project Details */}
-      <div style={{ padding: '14px 20px', borderRight: 'var(--border-width) solid var(--border-color)', backgroundColor: '#ffffff' }}>
+      <div style={{ padding: '14px 20px', borderRight: 'var(--border-width) solid var(--border-color)', backgroundColor: '#ffffff', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
           <Briefcase size={16} color="var(--accent)" />
           <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Project Reference</span>
         </div>
+
+        {isReadOnly && (
+          <div style={{ 
+            position: 'absolute', 
+            top: '14px', 
+            right: '20px',
+            fontSize: '9px',
+            fontWeight: 800,
+            padding: '4px 10px',
+            borderRadius: '4px',
+            backgroundColor: 'var(--accent-soft)',
+            color: 'var(--accent)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            border: '1px solid rgba(99, 102, 241, 0.1)'
+          }}>
+            Read-Only
+          </div>
+        )}
         <div style={{ marginBottom: '12px' }}>
           <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text-primary)', lineHeight: '1.2' }}>
             {project.code} <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>— {project.name}</span>

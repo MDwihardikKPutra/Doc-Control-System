@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 
 interface InlineInputProps {
   id: string;
-  val: any;
+  val: string | number;
   fieldKey: string;
-  draftEdits: Record<string, any>;
-  onDraftChange: (id: string, field: string, value: any) => void;
+  draftEdits: Record<string, Record<string, string | number>>;
+  onDraftChange: (id: string, field: string, value: string | number) => void;
   type?: 'text' | 'number' | 'date' | 'select';
   bold?: boolean;
   align?: 'left' | 'center' | 'right';

@@ -7,26 +7,30 @@ import { useProjects } from './ProjectContext';
 import { useUI } from './UIContext';
 import { useAudit } from './AuditContext';
 
+type DraftEdits = Record<string, Partial<DocumentRecord & DocumentHistory>>;
+type BatchUpdate = { id: string; fields: Partial<DocumentRecord & DocumentHistory> };
+type BulkRow = Pick<DocumentRecord, 'disiplin' | 'noDokumen' | 'namaDokumen'>;
+
 interface DocumentContextType {
   documents: DocumentRecord[];
   filteredDocuments: DocumentRecord[];
   selectedDocIds: Set<string>;
-  draftEdits: Record<string, any>;
+  draftEdits: DraftEdits;
   selectedHistoryDocId: string | null;
-  linkModalData: any | null;
+  uniqueLocations: string[];
   
   // Actions
-  handleBatchUpdate: (updates: { id: string, fields: any }[]) => void;
-  handleBulkSubmit: (rows: any[]) => void;
-  handleDraftChange: (id: string, field: string, value: any) => void;
+  handleBatchUpdate: (updates: BatchUpdate[]) => void;
+  handleBulkSubmit: (rows: BulkRow[]) => void;
+  handleUpdateLink: (id: string, newLink: string, isHistory: boolean, docId?: string) => void;
+  handleDraftChange: (id: string, field: string, value: string | number) => void;
   saveDraft: (id: string) => void;
   cancelDraft: (id: string) => void;
-  saveHistoryDraft: (docId: string, historyId: string, updatedHistory: any) => void;
+  saveHistoryDraft: (docId: string, historyId: string, updatedHistory: Partial<DocumentHistory>) => void;
   setSelectedHistoryDocId: (id: string | null) => void;
-  setLinkModalData: (data: any | null) => void;
   toggleSelectDoc: (id: string) => void;
   toggleSelectAll: (ids: string[], isSelected: boolean) => void;
-  isDirty: (id: string, original: any) => boolean;
+  isDirty: (id: string, original: DocumentRecord | DocumentHistory) => boolean;
 }
 
 const DocumentContext = createContext<DocumentContextType | undefined>(undefined);
@@ -36,11 +40,10 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { searchQuery, activeFilters } = useUI();
   const { addLog } = useAudit();
 
-  const [documents, setDocuments] = useState<DocumentRecord[]>(syncWithLatestHistory(mockDocuments));
+  const [documents, setDocuments] = useState<DocumentRecord[]>(() => syncWithLatestHistory(mockDocuments));
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
-  const [draftEdits, setDraftEdits] = useState<Record<string, any>>({});
+  const [draftEdits, setDraftEdits] = useState<DraftEdits>({});
   const [selectedHistoryDocId, setSelectedHistoryDocId] = useState<string | null>(null);
-  const [linkModalData, setLinkModalData] = useState<any | null>(null);
 
   const deferredSearchKey = useDeferredValue(searchQuery);
 
@@ -51,6 +54,11 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       filters: activeFilters
     });
   }, [documents, currentProject?.id, deferredSearchKey, activeFilters]);
+
+  const uniqueLocations = useMemo(() =>
+    Array.from(new Set(documents.map(d => d.lokasiStatus).filter(Boolean))).sort(),
+    [documents]
+  );
 
   const handleBatchUpdate = useCallback((updates: { id: string, fields: any }[]) => {
     setDocuments(prevDocs => {
@@ -111,7 +119,7 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addLog('DOCUMENT', 'CREATE', `Bulk registered ${newDocs.length} docs`, '', { projectId: currentProject.id });
   }, [currentProject, addLog]);
 
-  const handleDraftChange = useCallback((id: string, field: string, value: any) => {
+  const handleDraftChange = useCallback((id: string, field: string, value: string | number) => {
     setDraftEdits(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   }, []);
 
@@ -152,6 +160,26 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addLog('DOCUMENT', 'UPDATE', `Updated history ${historyId} for doc ${docId}`, '', { projectId: currentProject?.id });
   }, [addLog, currentProject?.id]);
 
+  const handleUpdateLink = useCallback((id: string, newLink: string, isHistory: boolean, docId?: string) => {
+    setDocuments(prev => prev.map(doc => {
+      if (!isHistory && doc.id === id) {
+        addLog('DOCUMENT', 'UPDATE', `Updated link for ${doc.noDokumen}`, `New link: ${newLink}`, { projectId: currentProject?.id, docNo: doc.noDokumen });
+        return { ...doc, deskripsiLink: newLink };
+      }
+      if (isHistory && doc.id === docId) {
+        const newHistory = doc.history.map(h => h.id === id ? { ...h, deskripsiLink: newLink } : h);
+        let updatedDoc = { ...doc, history: newHistory };
+        // Sync main link if it's the latest history
+        if (id === doc.history[0]?.id) {
+          updatedDoc.deskripsiLink = newLink;
+        }
+        addLog('DOCUMENT', 'UPDATE', `Updated history link for ${doc.noDokumen}`, `New link: ${newLink}`, { projectId: currentProject?.id, docNo: doc.noDokumen });
+        return updatedDoc;
+      }
+      return doc;
+    }));
+  }, [currentProject?.id, addLog]);
+
   const toggleSelectDoc = useCallback((id: string) => {
     setSelectedDocIds(prev => {
       const next = new Set(prev);
@@ -165,16 +193,17 @@ export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSelectedDocIds(isSelected ? new Set(ids) : new Set());
   }, []);
 
-  const isDirty = useCallback((id: string, original: any) => {
+  const isDirty = useCallback((id: string, original: DocumentRecord | DocumentHistory) => {
     const d = draftEdits[id];
     if (!d) return false;
-    return Object.keys(d).some(k => d[k] !== (original as any)[k]);
+    return Object.keys(d).some(k => d[k as keyof typeof d] !== (original as Record<string, unknown>)[k]);
   }, [draftEdits]);
 
   const value = {
-    documents, filteredDocuments, selectedDocIds, draftEdits, selectedHistoryDocId, linkModalData,
+    documents, filteredDocuments, selectedDocIds, draftEdits, selectedHistoryDocId,
+    uniqueLocations,
     handleBatchUpdate, handleBulkSubmit, handleDraftChange, saveDraft, cancelDraft, saveHistoryDraft,
-    setSelectedHistoryDocId, setLinkModalData, toggleSelectDoc, toggleSelectAll, isDirty
+    handleUpdateLink, setSelectedHistoryDocId, toggleSelectDoc, toggleSelectAll, isDirty
   };
 
   return <DocumentContext.Provider value={value}>{children}</DocumentContext.Provider>;

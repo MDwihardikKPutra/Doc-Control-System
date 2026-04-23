@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { RightSidebar } from '../common/RightSidebar';
 import { PreviewDropdown, IssueDropdown } from './StatusDropdowns';
 import type { DocumentRecord } from '../../types';
@@ -31,6 +31,8 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
   const [globalTransmittalNo, setGlobalTransmittalNo] = useState('');
   const [rowItems, setRowItems] = useState<BatchRow[]>([]);
 
+  const allDocIds = useMemo(() => documents.map(d => d.id), [documents]);
+
   // Initialize rows when sidebar opens or selection changes
   useEffect(() => {
     if (isOpen) {
@@ -52,8 +54,21 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
     setRowItems(prev => prev.map(row => row.id === id ? { ...row, [field]: value } : row));
   };
 
-  const handleApply = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApply = () => {
+    // Validation: Require key fields
+    if (!globalTransmittalNo.trim()) {
+      alert("Nomor Transmittal wajib diisi.");
+      return;
+    }
+    if (!globalDate) {
+      alert("Tanggal wajib diisi.");
+      return;
+    }
+    if (!globalLocation) {
+      alert("Lokasi wajib dipilih.");
+      return;
+    }
+
     const updates = rowItems.map(row => ({
       id: row.id,
       fields: {
@@ -81,7 +96,7 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
         
         {/* COMPACT HEADER AT TOP */}
         <div style={{ 
-          padding: '12px 24px', 
+          padding: '8px 20px', 
           borderBottom: '1px solid var(--border-color)', 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -92,44 +107,43 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
           zIndex: 100
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ backgroundColor: 'var(--text-primary)', color: '#fff', padding: '3px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 800 }}>
+            <div style={{ backgroundColor: 'var(--text-primary)', color: '#fff', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 800 }}>
               {rowItems.length} Docs
             </div>
-            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 600 }}>Batch Editor</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 700 }}>BATCH EDITOR</div>
           </div>
         </div>
 
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' }}>
+        <div style={{ padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
           
           {/* GLOBAL DEFAULTS - ULTRA CLEAN */}
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: '24px',
-            padding: '20px 24px',
+            gap: '12px',
+            padding: '6px 12px',
             backgroundColor: '#ffffff',
-            borderRadius: '12px',
+            borderRadius: '6px',
             border: '1px solid var(--border-color)'
           }}>
-            <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--text-primary)' }}>Tipe Transmittal</label>
-              <div style={{ display: 'flex', gap: '4px', backgroundColor: '#f8fafc', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+            <div className="form-group" style={{ gap: '2px' }}>
+              <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '9px', fontWeight: 900 }}>TIPE</label>
+              <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f8fafc', padding: '2px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
                 {['IN', 'OUT'].map(t => (
                   <button
                     key={t}
                     onClick={() => setGlobalType(t)}
                     style={{
                       flex: 1,
-                      padding: '8px 0',
-                      borderRadius: '8px',
+                      padding: '2px 0',
+                      borderRadius: '3px',
                       border: 'none',
-                      fontSize: '12px',
+                      fontSize: '10px',
                       fontWeight: 800,
                       cursor: 'pointer',
                       backgroundColor: globalType === t ? '#fff' : 'transparent',
                       color: globalType === t ? 'var(--accent)' : 'var(--text-secondary)',
-                      boxShadow: globalType === t ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      boxShadow: globalType === t ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     }}
                   >
                     {t}
@@ -138,38 +152,45 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--text-primary)' }}>Tanggal</label>
+            <div className="form-group" style={{ gap: '2px' }}>
+              <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '9px', fontWeight: 900 }}>TANGGAL</label>
               <input 
                 type="date"
                 className="form-input"
                 value={globalDate}
                 onChange={e => setGlobalDate(e.target.value)}
-                style={{ height: '42px', backgroundColor: '#f8fafc' }}
+                style={{ height: '28px', backgroundColor: '#f8fafc', fontSize: '11px', padding: '0 6px' }}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--text-primary)' }}>Lokasi</label>
+            <div className="form-group" style={{ gap: '2px' }}>
+              <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '9px', fontWeight: 900 }}>LOKASI</label>
               <select 
                 className="form-input"
                 value={globalLocation} 
                 onChange={e => setGlobalLocation(e.target.value)}
-                style={{ height: '42px', backgroundColor: '#f8fafc' }}
+                style={{ height: '28px', backgroundColor: '#f8fafc', fontWeight: 600, fontSize: '10px', padding: '0 4px' }}
               >
+                <option value="">Pilih Lokasi...</option>
                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                <option value="IDS (PT INFORMATION DATASYSTEM)">IDS (PT INFORMATION DATASYSTEM)</option>
+                <option value="CLIENT SITE">CLIENT SITE</option>
               </select>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" style={{ color: 'var(--text-primary)' }}>No. Transmittal Global</label>
+            <div className="form-group" style={{ gap: '2px' }}>
+              <label className="form-label" style={{ color: 'var(--text-primary)', fontSize: '9px', fontWeight: 900 }}>NO TRANSMITTAL</label>
               <input 
                 type="text"
                 className="form-input"
-                placeholder="TR-..."
                 value={globalTransmittalNo}
-                onChange={e => setGlobalTransmittalNo(e.target.value)}
-                style={{ height: '42px', backgroundColor: '#f8fafc', fontWeight: 600 }}
+                onChange={e => {
+                  const val = e.target.value;
+                  setGlobalTransmittalNo(val);
+                  // Apply to all rows immediately for visual feedback
+                  setRowItems(prev => prev.map(row => ({ ...row, transmittalNo: val })));
+                }}
+                style={{ height: '28px', backgroundColor: '#f8fafc', fontWeight: 700, fontSize: '11px', padding: '0 8px' }}
               />
             </div>
           </div>
@@ -182,32 +203,21 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
           }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
-                  <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>DOKUMEN</th>
-                  <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>NO. TRANSMITTAL</th>
-                  <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>STATUS</th>
-                  <th style={{ padding: '16px 20px', textAlign: 'left', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>ISSUE FLOW</th>
-                  <th style={{ padding: '16px 20px', textAlign: 'center', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.05em', width: '80px' }}>REV</th>
+                <tr style={{ borderBottom: '2px solid var(--border-color)', backgroundColor: '#fff' }}>
+                  <th style={{ padding: '4px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>DOKUMEN</th>
+                  <th style={{ padding: '4px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>STATUS</th>
+                  <th style={{ padding: '4px 12px', textAlign: 'left', fontSize: '9px', fontWeight: 900, color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>ISSUE FLOW</th>
+                  <th style={{ padding: '4px 12px', textAlign: 'center', fontSize: '9px', fontWeight: 900, color: 'var(--text-secondary)', letterSpacing: '0.05em', width: '60px' }}>REV</th>
                 </tr>
               </thead>
               <tbody>
                 {rowItems.map((row, idx) => (
                   <tr key={row.id} style={{ borderBottom: idx === rowItems.length - 1 ? 'none' : '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '16px 20px' }}>
-                      <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>{row.docNo}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', opacity: 0.8 }}>{row.docName}</div>
+                    <td style={{ padding: '4px 12px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '11px', color: 'var(--text-primary)', marginBottom: '1px' }}>{row.docNo}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', opacity: 0.8 }}>{row.docName}</div>
                     </td>
-                    <td style={{ padding: '12px 20px' }}>
-                      <input 
-                        type="text"
-                        className="form-input"
-                        placeholder="TR-..."
-                        value={row.transmittalNo}
-                        onChange={e => updateRow(row.id, 'transmittalNo', e.target.value)}
-                        style={{ fontWeight: 600, border: '1px solid #e2e8f0' }}
-                      />
-                    </td>
-                    <td style={{ padding: '12px 20px' }}>
+                    <td style={{ padding: '2px 12px' }}>
                       <PreviewDropdown 
                         id={row.id} 
                         val={row.previewReport} 
@@ -215,7 +225,7 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
                         onDraftChange={(_id, _f, v) => updateRow(row.id, 'previewReport', v)} 
                       />
                     </td>
-                    <td style={{ padding: '12px 20px' }}>
+                    <td style={{ padding: '2px 12px' }}>
                       <IssueDropdown 
                         id={row.id} 
                         val={row.issue} 
@@ -223,13 +233,13 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
                         onDraftChange={(_id, _f, v) => updateRow(row.id, 'issue', v)} 
                       />
                     </td>
-                    <td style={{ padding: '12px 20px', textAlign: 'center' }}>
+                    <td style={{ padding: '2px 12px', textAlign: 'center' }}>
                       <input 
                         type="number"
                         className="form-input"
                         value={row.noRevisi}
                         onChange={e => updateRow(row.id, 'noRevisi', parseInt(e.target.value) || 0)}
-                        style={{ textAlign: 'center', width: '60px', border: '1px solid #e2e8f0' }}
+                        style={{ textAlign: 'center', width: '40px', border: '1px solid #e2e8f0', height: '22px', fontSize: '10px', padding: 0 }}
                       />
                     </td>
                   </tr>
@@ -239,19 +249,19 @@ export const AddTransmittalSidebar: React.FC<AddTransmittalSidebarProps> = ({
           </div>
 
           {/* ACTION BUTTONS */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', padding: '12px 0' }}>
-            <button className="btn" onClick={onClose} style={{ height: '44px', padding: '0 28px', fontSize: '14px', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '0 0 6px 0' }}>
+            <button className="btn" onClick={onClose} style={{ height: '28px', padding: '0 12px', fontSize: '11px', borderRadius: '4px' }}>
               Batal
             </button>
             <button 
               className="btn btn-primary" 
               onClick={handleApply}
               style={{ 
-                height: '44px', 
-                padding: '0 36px', 
-                borderRadius: '12px', 
+                height: '28px', 
+                padding: '0 16px', 
+                borderRadius: '4px', 
                 fontWeight: 800,
-                fontSize: '14px'
+                fontSize: '11px'
               }}
             >
               Simpan Perubahan

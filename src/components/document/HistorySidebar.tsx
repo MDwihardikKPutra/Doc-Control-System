@@ -18,7 +18,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ selectedDocId, o
       isOpen={!!selectedDocId}
       onClose={onClose}
       title="Revision History"
-      width="1100px"
+      width="1200px"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
           <button className="btn" onClick={onClose} style={{ height: '32px', padding: '0 20px', fontSize: '11px', fontWeight: 700 }}>
@@ -30,18 +30,21 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ selectedDocId, o
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {doc ? (
           <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 20px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ padding: '16px 20px', backgroundColor: 'var(--accent-soft)', borderBottom: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '4px' }}>Document Reference</div>
               <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{doc.noDokumen}</div>
               <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>{doc.namaDokumen}</div>
             </div>
             
             <div style={{ flex: 1, overflow: 'auto' }}>
-              <HistoryTable 
-                doc={doc}
-                hideDiscipline={true}
-                isCompact={false}
-              />
+              <table className="data-table" style={{ width: '100%', tableLayout: 'fixed' }}>
+                <tbody>
+                  <HistoryTable 
+                    doc={doc}
+                    hideDiscipline={true}
+                  />
+                </tbody>
+              </table>
             </div>
           </div>
         ) : (

@@ -15,7 +15,8 @@ export const DocumentTrackingView: React.FC = () => {
     columnWidths,
     handleResizeStart,
     setIsBulkAddModalOpen: setIsModalOpen,
-    toggleColumn
+    toggleColumn,
+    isReadOnly
   } = useUI();
   
   const {
@@ -62,15 +63,16 @@ export const DocumentTrackingView: React.FC = () => {
       display: 'flex', 
       flexDirection: 'column', 
       gap: 'var(--gap-main)', 
-      padding: 'var(--p-page)',
+      padding: isReadOnly ? '12px 16px' : 'var(--p-page)',
       height: '100%',
       flex: 1,
       minHeight: 0,
       overflow: 'hidden'
     }}>
-      <ProjectSummaryCard project={currentProject} stats={stats} />
+      
 
       <div className="table-container" style={{ flex: 1, minHeight: 0 }}>
+        <ProjectSummaryCard project={currentProject} stats={stats} isEmbedded={true} />
         {activeFilters.disiplin && (
           <div style={{ 
             padding: '12px 24px', 
@@ -103,7 +105,7 @@ export const DocumentTrackingView: React.FC = () => {
       </div>
 
       {/* Floating Batch Action Trigger */}
-      {selectedDocIds.size > 0 && (
+      {selectedDocIds.size > 0 && !isReadOnly && (
         <div style={{
           position: 'fixed',
           bottom: '32px',
@@ -162,7 +164,7 @@ export const DocumentTrackingView: React.FC = () => {
         documents={filteredDocuments}
         onApply={handleBatchUpdate}
         onClose={() => setIsBatchSidebarOpen(false)}
-        uniqueLocations={[]} // This can be extracted from DocumentService if needed
+        uniqueLocations={Array.from(new Set(filteredDocuments.map(d => d.lokasiStatus).filter(Boolean))).sort()}
       />
     </div>
   );

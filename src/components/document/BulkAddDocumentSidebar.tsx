@@ -108,7 +108,7 @@ export const BulkAddDocumentSidebar: React.FC<BulkAddDocumentSidebarProps> = ({
       }
     >
       <div className="sidebar-content-body" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '8px 16px', backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 900, letterSpacing: '0.05em' }}>
+        <div style={{ padding: '8px 16px', backgroundColor: 'var(--accent-soft)', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontSize: '10px', fontWeight: 950, letterSpacing: '0.05em' }}>
           <FileText size={12} color="var(--accent)" /> <span>HIGH-SPEED SPREADSHEET INPUT (MAX DENSITY)</span>
         </div>
         

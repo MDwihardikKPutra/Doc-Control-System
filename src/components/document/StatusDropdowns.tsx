@@ -51,14 +51,16 @@ export const PreviewDropdown: React.FC<DropdownProps> = ({ id, val, draftEdits, 
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '4px'
+          gap: '12px',
+          padding: '2px 10px',
+          minWidth: 'max-content'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <div className="dot"></div>
           {activeOption.label}
         </div>
-        {editable && <ChevronDown size={10} opacity={0.5} />}
+        {editable && <ChevronDown size={10} style={{ opacity: 0.5, flexShrink: 0 }} />}
       </div>
 
       {isOpen && (
@@ -147,7 +149,8 @@ export const IssueDropdown: React.FC<DropdownProps> = ({ id, val, draftEdits, on
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '4px'
+          gap: '8px',
+          padding: '2px 10px'
         }}
       >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -238,7 +241,7 @@ export const TransmittalUnit: React.FC<{ id: string, typeVal: string, noVal: str
   return (
     <div 
       ref={containerRef}
-      style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}
+      style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'flex-start' }}
     >
       {/* Read View */}
       <div 
@@ -247,11 +250,11 @@ export const TransmittalUnit: React.FC<{ id: string, typeVal: string, noVal: str
           display: 'flex', 
           gap: '4px', 
           alignItems: 'center', 
-          justifyContent: 'center', 
+          justifyContent: 'flex-start', 
           fontWeight: 800, 
           fontSize: '11px', 
           cursor: editable ? 'pointer' : 'default',
-          padding: '2px 8px',
+          padding: '2px 0px',
           borderRadius: '4px',
           backgroundColor: isDirtyFlow ? 'var(--accent-soft)' : 'transparent',
           border: isDirtyFlow ? 'var(--border-width) dashed var(--accent)' : '1px solid transparent',

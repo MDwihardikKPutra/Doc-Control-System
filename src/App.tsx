@@ -7,6 +7,8 @@ import { AuditLogPage } from './components/audit/AuditLogPage';
 import { ProjectDashboard as ProjectManagementPage } from './components/project/ProjectDashboard';
 import { BulkAddDocumentSidebar } from './components/document/BulkAddDocumentSidebar';
 import { HistorySidebar } from './components/document/HistorySidebar';
+import { HelpCenterPage } from './components/info/HelpCenterPage';
+import { LinkModal } from './components/modals/FormModals';
 
 import { useUI } from './context/UIContext';
 import { useProjects } from './context/ProjectContext';
@@ -47,23 +49,40 @@ const ProjectSync: React.FC = () => {
   return <Outlet />;
 };
 
+// Share Sync: Sets the ReadOnly mode active
+const ShareSync: React.FC = () => {
+  const { setIsReadOnly } = useUI();
+  useEffect(() => {
+    setIsReadOnly(true);
+    return () => setIsReadOnly(false);
+  }, [setIsReadOnly]);
+  return <DocumentTrackingView />;
+};
+
 const App: React.FC = () => {
   const { 
-    isSidebarCollapsed, 
-    isBulkAddModalOpen, setIsBulkAddModalOpen
+    isBulkAddModalOpen, setIsBulkAddModalOpen,
+    linkModalData, setLinkModalData, linkInput, setLinkInput,
+    isReadOnly
   } = useUI();
   
   const { currentProject } = useProjects();
-  const { handleBulkSubmit, selectedHistoryDocId, setSelectedHistoryDocId } = useDocuments();
+  const { 
+    handleBulkSubmit, selectedHistoryDocId, setSelectedHistoryDocId,
+    handleUpdateLink
+  } = useDocuments();
+
+  // Prevent Sidebar flicker on share links by checking URL directly
+  const isSharePath = window.location.pathname.includes('/share');
+  const shouldShowSidebar = !isReadOnly && !isSharePath;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fcfcfc', color: 'var(--text-primary)', fontSmooth: 'antialiased' }}>
-      <Sidebar />
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#eef2f6', color: 'var(--text-primary)', fontSmooth: 'antialiased' }}>
+      {shouldShowSidebar && <Sidebar />}
       
-      <main style={{ 
-        flex: 1, 
-        marginLeft: isSidebarCollapsed ? '64px' : 'var(--sidebar-width)', 
-        transition: 'margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        <main style={{ 
+          flex: 1, 
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
@@ -73,10 +92,12 @@ const App: React.FC = () => {
           <Route path="/" element={<Navigate to="/projects" replace />} />
           <Route path="/projects" element={<WorkspaceSync />} />
           <Route path="/audit" element={<AuditLogPage />} />
+          <Route path="/help" element={<HelpCenterPage />} />
           
           {/* Main Scoped Routes - placed at bottom to avoid conflicts */}
           <Route path="/:projectSlug/*" element={<ProjectSync />}>
             <Route path="tracking" element={<DocumentTrackingView />} />
+            <Route path="share" element={<ShareSync />} />
             <Route path="insights" element={currentProject ? <ProjectInsights /> : null} />
           </Route>
 
@@ -94,6 +115,24 @@ const App: React.FC = () => {
       <HistorySidebar 
         selectedDocId={selectedHistoryDocId} 
         onClose={() => setSelectedHistoryDocId(null)} 
+      />
+
+      <LinkModal 
+        modalData={linkModalData}
+        linkInput={linkInput}
+        setLinkInput={setLinkInput}
+        onClose={() => setLinkModalData(null)}
+        onSave={() => {
+          if (linkModalData) {
+            handleUpdateLink(
+              linkModalData.id, 
+              linkInput, 
+              linkModalData.isHistory, 
+              linkModalData.docId || selectedHistoryDocId || undefined
+            );
+            setLinkModalData(null);
+          }
+        }}
       />
     </div>
   );
